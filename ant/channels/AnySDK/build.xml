@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<project name="Client" default="config">
+	<!-- property -->
+	<property name="channel.dir" value="${basedir}/ant/channels/AnySDK" />
+	
+	<target name="config-src">
+		<!-- 
+	    <copy todir="${basedir}/src">
+			<fileset dir="${channel.dir}/src" includes="**/*"/>
+		</copy>
+	 	-->
+	</target>
+	<target name="config-libs">
+	    <copy todir="${basedir}/libs">
+			<fileset dir="${channel.dir}/libs" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-icons" >  
+        <ImageCompose srcfile="${channel.dir}/res/icon.png" destfile="${channel.dir}/res/logo.png" output="${channel.dir}/res/icon.png"/>
+	</target>
+	
+	<target name="config-res" depends="config-icons">
+	    <copy todir="${basedir}/res">
+			<fileset dir="${channel.dir}/res" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-assets">
+	    <copy todir="${basedir}/assets">
+			<fileset dir="${channel.dir}/assets" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-manifest">
+	    <xmltask source="${basedir}/AndroidManifest.xml" dest="${basedir}/AndroidManifest.xml">
+		    <!-- modify package name -->
+		    <replace path="/manifest[@package='com.semgilo.game.dotakillx3']/@package" withText="com.semgilo.game.dotakillx3"></replace>
+			<!-- modify umeng name -->
+		    <replace path="/manifest/application/meta-data[@android:name='UMENG_CHANNEL']/@android:value" withText="AnySDK"></replace>
+		</xmltask>
+	</target>
+	
+	<target name="config" depends="config-libs,config-res,config-assets,config-src,config-manifest"> 
+		<property name="android.library.reference.1" value="123"/>
+	</target>
+	
+	
+	<target name="anysdk">
+		<exec executable="/Applications/AnySDK.app/Contents/MacOS/command" >
+            <arg line="run -game 刀塔杀杀杀 -channel 000000 -apkfile /Users/semgilo/Documents/GitHub/DotaKillX3/Client/runtime/android/1.0.0/DotaKillX3_AnySDK_1.0.0.apk -platform 0"/>
+        	<arg value=""/>
+        </exec>
+        
+        <antcall target="uninstall" inheritAll="true" />
+		<exec executable="${adb}" failonerror="true">
+            <arg line="${adb.device.arg}" />
+            <arg value="install" />
+            <arg value="-r" />
+            <arg path="/Users/semgilo/Documents/AnySDK/刀塔杀杀杀/1.0/官网/刀塔杀杀杀_官网_1.0.apk" />
+        </exec>
+	</target>	
+</project>
+

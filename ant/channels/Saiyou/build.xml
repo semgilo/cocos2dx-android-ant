@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<project name="Huawei" default="config">
+	<!-- property -->
+	<property name="channel.dir" value="${basedir}/ant/channels/Offcial" />
+	
+	<target name="config-manifest">
+	    <xmltask source="${basedir}/AndroidManifest.xml" dest="${basedir}/AndroidManifest.xml">
+		    <!-- modify package name -->
+		    <!-- <replace path="/manifest[@package='com.semgilo.game.dotakillx3']/@package" withText="com.semgilo.game.dotakillx3.huawei"></replace> -->
+			<!-- modify umeng name -->
+		    <!-- <replace path="/manifest/application/meta-data[@android:name='UMENG_CHANNEL']/@android:value" withText="Saiou"></replace> -->
+		</xmltask>
+	</target>
+	
+	<target name="config" depends="config-manifest"> 
+		
+	</target>	
+</project>
+

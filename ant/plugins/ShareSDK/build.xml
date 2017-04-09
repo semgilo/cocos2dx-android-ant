@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<project name="MogoAds" default="config">	
+	<!-- property -->
+	<property name="plugin.dir" value="${basedir}\ant\plugins\ShareSDK" />
+
+	<target name="config-src">
+	    <copy todir="${basedir}\src">
+			<fileset dir="${plugin.dir}\src" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-libs">
+	    <copy todir="${basedir}\libs">
+			<fileset dir="${plugin.dir}\libs" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-res">
+	    <copy todir="${basedir}\res">
+			<fileset dir="${plugin.dir}\res" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-assets">
+	    <copy todir="${basedir}\assets">
+			<fileset dir="${plugin.dir}\assets" includes="**/*"/>
+		</copy>
+	</target>
+	
+	
+	<target name="config-manifest">
+		<xmltask source="${basedir}/AndroidManifest.xml" dest="${basedir}/AndroidManifest.xml">
+		    <!-- modify package name -->
+		    <replace path="/manifest[@package='com.semgilo.game.dotakillx3']/@package" withText="com.semgilo.game.dotakillx3"></replace>
+			
+		    <!-- insert activities -->
+			<insert path="/manifest/application" position="under"><![CDATA[		
+		<!-- 分享 -->
+		<activity
+			android-name="com.mob.tools.MobUIShell"
+			android-theme="@android:style/Theme.Translucent.NoTitleBar"
+			android-configChanges="keyboardHidden|orientation|screenSize"
+			android-screenOrientation="portrait"
+			android-windowSoftInputMode="stateHidden|adjustResize" >
+			<intent-filter>
+				<data android-scheme="tencent100371282" />
+				<action android-name="android.intent.action.VIEW" />
+				<category android-name="android.intent.category.BROWSABLE" />
+				<category android-name="android.intent.category.DEFAULT" />
+			</intent-filter>
+		</activity>
+		<!--微信分享回调 -->
+		<activity
+			android-name=".wxapi.WXEntryActivity"
+			android-theme="@android-style/Theme.Translucent.NoTitleBar"
+			android-configChanges="keyboardHidden|orientation|screenSize"
+			android-exported="true"
+			android-screenOrientation="portrait" />
+]]></insert>
+		</xmltask>
+		<echo message="finish xmltask , replace android- to android:" />
+		<replace dir="${basedir}" includes="AndroidManifest.xml" encoding="UTF-8">
+			<replacefilter token="android-" value="android:"/>
+		</replace>
+	</target>
+	
+	<target name="config" depends="config-libs,config-res,config-assets,config-src,config-manifest" > 
+	</target>
+</project>
+

@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<project name="UMAnalyze" default="config">	
+	<!-- property -->
+	<property name="plugin.dir" value="${basedir}\ant\plugins\UMAnalyze" />
+
+	<target name="config-src">
+	    <copy todir="${basedir}\src">
+			<fileset dir="${plugin.dir}\src" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-libs">
+	    <copy todir="${basedir}\libs">
+			<fileset dir="${plugin.dir}\libs" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-res">
+	    <copy todir="${basedir}\res">
+			<fileset dir="${plugin.dir}\res" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-assets">
+	    <copy todir="${basedir}\assets">
+			<fileset dir="${plugin.dir}\assets" includes="**/*"/>
+		</copy>
+	</target>
+	
+	
+	<target name="config-manifest">
+		<xmltask source="${basedir}/AndroidManifest.xml" dest="${basedir}/AndroidManifest.xml">
+		    <!-- modify package name -->
+		    <replace path="/manifest[@package='com.semgilo.game.dotakillx3']/@package" withText="com.semgilo.game.dotakillx3"></replace>
+			
+		    <!-- insert activities -->
+			<insert path="/manifest/application" position="under"><![CDATA[		
+		<!-- 友盟统计  -->
+		<meta-data android-value="5559897d67e58ee2d80002cd" android-name="UMENG_APPKEY"></meta-data>
+		<meta-data android-value="Xiaoao" android-name="UMENG_CHANNEL"/>
+]]></insert>
+		</xmltask>
+		<echo message="finish xmltask , replace android- to android:" />
+		<replace dir="${basedir}" includes="AndroidManifest.xml" encoding="UTF-8">
+			<replacefilter token="android-" value="android:"/>
+		</replace>
+	</target>
+	
+	<target name="config" depends="config-libs,config-res,config-assets,config-src,config-manifest" > 
+	</target>
+</project>
+

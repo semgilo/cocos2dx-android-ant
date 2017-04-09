@@ -1,0 +1,356 @@
+<?xml version="1.0" ?>
+<project name="Client" default="build_all">
+	<!--  ===================  -->
+	<!--     Environment       -->
+	<!--  ===================  -->
+	<property file="local.properties" />
+	<property file="ant.properties" />
+	<property file="project.properties" />
+	
+	<!-- xmltask -->
+	<taskdef name="xmltask" classname="com.oopsconsultancy.xmltask.ant.XmlTask" classpath="${basedir}\ant\lib\xmltask.jar"/>
+	<!-- antenna -->
+	<taskdef resource="antenna.properties" classpath="${basedir}\ant\lib\antenna-bin-0.9.13.jar"/>
+	<taskdef name="WtkPreprocess" classname="de.pleumann.antenna.WtkPreprocess" classpath="${basedir}\ant\lib\antenna-bin-0.9.13.jar"/>
+	<!-- contrib -->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties" classpath="${basedir}\ant\lib\ant-contrib-1.0b3.jar"/>
+	<!-- imagetool 有问题，暂时用不到不处理-->
+	<!-- 
+	<taskdef name="ImageCompose" classname="com.semgilo.tools.imagetool.ImageCompose" classpath="${basedir}\ant\lib\imagetool.jar"/>
+	-->
+	<property name="wtk.home" value="${wtk.dir}"/>
+	<!-- 检查 sdk.dir -->
+    <fail message="sdk.dir is missing. Make sure to generate local.properties using 'android update project' or to inject it through an env var" unless="sdk.dir" />
+   	
+    <!-- input -->
+    <property name="prj.src.dir" value="${basedir}\src"></property>
+    <property name="prj.assets.dir" value="${basedir}\assets"></property>
+    <property name="prj.res.dir" value="${basedir}\res"></property>
+    <property name="prj.libs.dir" value="${basedir}\libs"></property>
+    <property name="adb.bin" location="${sdk.dir}/platform-tools/adb" />
+    <!-- output -->
+ 	<property name="prj.preprocess.out.dir" value="${basedir}/preprocess"></property>
+    
+ 	<!--  ===================  -->
+	<!--       Macros          -->
+	<!--  ===================  -->
+ 	<macrodef name="do-if-exist">
+        <attribute name="path"/>
+        <element name="task-to-do" implicit="yes" />
+        <sequential>
+            <var name="isExist" unset="true"/>
+            <available property="isExist" file="@{path}"/>
+			<if>
+			 	<isset property="isExist"/>
+			   	<then>
+				    <task-to-do />
+			    </then>
+			    <else>
+			        <echo message="@{path} isn't exist"></echo>
+			    </else>
+			</if>
+        </sequential>
+    </macrodef>
+    
+	<macrodef name="mkdir-if-noexist">
+        <attribute name="dir"/>
+        <sequential>
+            <var name="isExist" unset="true"/>
+            <available property="isExist" file="@{dir}"/>
+			<if>
+			 	<not><isset property="isExist"/></not>
+			   	<then>
+				    <mkdir dir="@{dir}"></mkdir>
+			    </then>
+			</if>
+        </sequential>
+    </macrodef>
+	
+	<macrodef name="clean-dir-safely">
+        <attribute name="dir"/>
+        <attribute name="includes" default="**/*"/>
+        <attribute name="excludes" default=""/>
+        <sequential>
+			<mkdir-if-noexist dir="@{dir}"></mkdir-if-noexist>
+			<delete includeEmptyDirs="true">
+		        <fileset dir="@{dir}" includes="@{includes}" excludes="@{excludes}"/>
+			</delete>
+			<mkdir-if-noexist dir="@{dir}"></mkdir-if-noexist>
+        </sequential>
+    </macrodef>
+    
+	<macrodef name="delete-dir-safely">
+        <attribute name="dir"/>
+        <sequential>
+			<mkdir-if-noexist dir="@{dir}"></mkdir-if-noexist>
+			<delete includeEmptyDirs="true" >
+		        <fileset dir="@{dir}"/>
+			</delete>
+        </sequential>
+    </macrodef>
+   	
+	<macrodef name="copy-safely">
+        <attribute name="fromdir"/>
+        <attribute name="todir"/>
+        <attribute name="includes" default="**/*"/>
+        <attribute name="excludes" default=""/>
+        <sequential>
+           <mkdir-if-noexist dir="@{todir}"></mkdir-if-noexist>
+			<do-if-exist path="@{fromdir}">
+			    <do-if-exist path="@{todir}">
+			        <copy todir="@{todir}">
+						<fileset dir="@{fromdir}" includes="@{includes}" excludes="@{excludes}"/>
+					</copy>
+			    </do-if-exist>
+			</do-if-exist>
+        </sequential>
+    </macrodef>
+ 	
+	<!--  ===================  -->
+	<!--       targets         -->
+	<!--  ===================  -->
+	
+	<target name="build-config-plugin">
+	    <echo message="========================================"/>
+	    <echo message="             ${pluginName}"/>
+	    <echo message="========================================"/>
+	    <property name="ant.plugins.dir" value="${basedir}/ant/Plugins"></property>
+	    <do-if-exist path="${ant.plugins.dir}\${pluginName}">
+	        <ant antfile="${ant.plugins.dir}/${pluginName}/build.xml" target="config"/>
+	    </do-if-exist>  
+	</target>
+	
+	<target name="build-config-plugins" description="Congifure all plugins files" >
+		<foreach list="${config.plugins}" target="build-config-plugin" param="pluginName" inheritall="true">   
+	    </foreach>	    
+	</target>
+	
+	<target name="build-config-base-encrypt" if="${config.encrypt}" >
+	    <echo message="compile lua"/>
+	    <exec executable="/Users/semgilo/Documents/Github/DotaKillX3/Tools/compile_lua.sh" failonerror="true">
+        </exec>
+	</target>
+	
+	<target name="build-config-base-compress" if="${config.compress}" >
+	    <echo message="compile lua"/>
+	    <exec executable="/Users/semgilo/Documents/Github/DotaKillX3/Tools/compile_lua.sh" failonerror="true">
+        </exec>
+	</target>
+	
+	<target name="build-config-base" depends="build-config-base-encrypt">
+	    <property name="channel-base-dir" value="${basedir}/ant/Channels/Base"></property>
+		
+	    <!-- 
+	    <echo message="copy channel base src"/>
+	    <copy todir="${basedir}\src">
+			<fileset dir="${channel-base-dir}\src" includes="**/*"/>
+		</copy>
+	     -->
+	    <echo message="copy channel base libs"/>
+	    <copy todir="${basedir}\libs">
+			<fileset dir="${channel-base-dir}\libs" includes="*.jar, ${config.armeabi}\gdb.setup, ${config.armeabi}\gdbserver, ${config.armeabi}\libcocos2dlua_${config.mode}.so,${config.armeabi}\libbspatch.so"/>
+		</copy>
+		
+	    <move file="${basedir}\libs\${config.armeabi}\libcocos2dlua_${config.mode}.so"
+   			tofile="${basedir}\libs\${config.armeabi}\libcocos2dlua.so" />
+		
+		<echo message="copy channel base res"/> 
+	    <if>
+		    <equals arg1="${config.review}" arg2="true" />
+		    <then>   
+		        <copy todir="${basedir}\res">
+					<fileset dir="${channel-base-dir}\res_review" includes="**/*"/>
+				</copy>
+		    </then>
+		    <else>
+		        <copy todir="${basedir}\res">
+					<fileset dir="${channel-base-dir}\res" includes="**/*"/>
+				</copy>
+		    </else>
+		</if>
+		
+	    <echo message="copy assets base assets"/>
+		<copy todir="${basedir}\assets">
+			<fileset dir="${channel-base-dir}\assets" includes="**/*"/>
+		</copy>
+		
+		
+	    <!-- if you want to copy assets from Client dir -->
+		<!-- 
+		<echo message="copy assets from project"/>
+		<property name="cocos.dir" value="${basedir}\..\..\.."/>
+		<copy todir="${basedir}\assets\res">
+			<fileset dir="${cocos.dir}\res" includes="**/*"/>
+		</copy>
+		<copy todir="${basedir}\assets">
+			<fileset file="${cocos.dir}\config.json"/>
+		</copy>
+		<if>
+		    <equals arg1="${config.encrypt}" arg2="true" />
+		    <then>   
+		        <copy todir="${basedir}\assets\src">
+					<fileset dir="${cocos.dir}\src" includes="**/*"/>
+				</copy>
+		    </then>
+		    <else>
+		        <copy todir="${basedir}\assets\src">
+					<fileset dir="${cocos.dir}\src_uncompile" includes="**/*"/>
+				</copy>
+		    </else>
+		</if>
+		 -->
+		<copy file="${channel-base-dir}\AndroidManifest.xml" tofile="${basedir}\AndroidManifest.xml"/>
+	</target>
+
+	<target name="build-config-clean" description="clean all config contains base, plugins and channels" >
+	    <clean-dir-safely dir="${basedir}\res"></clean-dir-safely>
+	    <clean-dir-safely dir="${basedir}\libs"></clean-dir-safely>
+	    <clean-dir-safely dir="${basedir}\assets"></clean-dir-safely>
+	    <clean-dir-safely dir="${basedir}\backup"></clean-dir-safely>
+	    <delete file="${basedir}\AndroidManifest.xml"></delete>
+	    <clean-dir-safely dir="${basedir}\src" excludes="org\cocos2dx\**/*,com\chukong\**/*,com\xiaoao\**/*"></clean-dir-safely>
+	</target>
+	
+	
+	<target name="build-config-backup">
+	    <echo message="========================================"/>
+	    <echo message="      Backup Configurations"/>
+	    <echo message="========================================"/>
+	    <copy-safely fromdir="${basedir}\src" todir="${basedir}\backup\src"></copy-safely>
+	    <copy-safely fromdir="${basedir}\res" todir="${basedir}\backup\res"></copy-safely>
+	    <copy-safely fromdir="${basedir}\libs" todir="${basedir}\backup\libs"></copy-safely>
+	    <copy-safely fromdir="${basedir}\assets" todir="${basedir}\backup\assets"></copy-safely>
+	    <copy file="${basedir}\AndroidManifest.xml" tofile="${basedir}\backup\AndroidManifest.xml"/>
+	</target>
+	
+	<target name="build-config" depends="build-config-clean, build-config-base, build-config-plugins, build-config-backup">
+	</target>
+	
+	<target name="build-channel-clean">
+	    <do-if-exist path="${basedir}\backup">
+	        <clean-dir-safely dir="${basedir}\res"></clean-dir-safely>
+		    <clean-dir-safely dir="${basedir}\libs"></clean-dir-safely>
+		    <clean-dir-safely dir="${basedir}\assets"></clean-dir-safely>
+		    <clean-dir-safely dir="${basedir}\src" excludes="org\cocos2dx\**/*,com\chukong\**/*"></clean-dir-safely>
+		    <delete file="${basedir}\AndroidManifest.xml"></delete>
+		    
+		    <!-- <clean-dir-safely dir="${basedir}\src"></clean-dir-safely>  -->
+		    
+		    <copy-safely fromdir="${basedir}\backup\src" todir="${basedir}\src"></copy-safely>
+		    <copy-safely fromdir="${basedir}\backup\res" todir="${basedir}\res"></copy-safely>
+		    <copy-safely fromdir="${basedir}\backup\libs" todir="${basedir}\libs"></copy-safely>
+		    <copy-safely fromdir="${basedir}\backup\assets" todir="${basedir}\assets"></copy-safely>
+		    <copy file="${basedir}\backup\AndroidManifest.xml" tofile="${basedir}\AndroidManifest.xml"/>
+	    </do-if-exist>
+	</target>
+	
+	<target name="build-preprocess-changed">
+	    <propertyregex property="prefile" input="${var}" regexp="\\" replace="/"/>
+        <propertyregex property="srcfile" input="${prefile}" regexp="/preprocess/" replace="/src/"/>
+        <condition property="files.match">
+           <filesmatch file1="${srcfile}" file2="${prefile}"/>
+        </condition>
+        <if>
+        <not><isset property="files.match"/></not>
+        <then>
+            <echo message="${prefile} => ${srcfile}"/>
+            <copy file="${prefile}" tofile="${srcfile}" overwrite="true"/>
+            <!-- 
+            <basename property="srcfile.basename" file="${srcfile}"/>
+            <dirname property="srcfile.dirname" file="${srcfile}"/>
+            -->     
+        </then>
+        </if>
+	</target>
+	
+	<target name="build-preprocess">
+		<WtkPreprocess
+			srcdir="${prj.src.dir}"
+			destdir="${prj.preprocess.out.dir}"
+			encoding="UTF-8"
+			symbols="${config.mode},${channel},${config.version},${config.plugins}"/>
+		<echo message="${config.mode},${channel},${config.version},${config.plugins}"/>
+	    <foreach target="build-preprocess-changed" param="var" inheritall="true">
+	        <fileset dir="${prj.preprocess.out.dir}"/>
+	    </foreach>
+	</target>
+	
+	<var name="ant.project.name" value="Client" />
+	<target name="build-packet" depends="build-preprocess">
+	    <delete dir="${prj.preprocess.out.dir}" />
+		<delete dir="obj" />
+		<echo>"：key,${channel}"</echo>    
+		<echo>"：${key.store}"</echo> 
+		<echo>"：${key.store.password}"</echo> 
+		<echo>"：${key.alias}"</echo> 
+		<echo>"：${key.alias.password}"</echo> 
+		<echo>"：${ant.project.name}"</echo>
+		<echo>"：${android.library.reference.1}"</echo>
+		<ant antfile="${basedir}/build.xml" target="packet">
+		</ant>
+		
+		<property name="prj.apk.dir" value="${basedir}\ant\apk\${config.version}\${config.name}_${channel}_${config.version}.apk"></property>
+		<move file="${basedir}\bin\Client-${config.mode}.apk"
+   			tofile="${prj.apk.dir}" />
+		
+		<!-- <antcall target="anysdk" inheritAll="true" />  -->
+	</target>
+	
+	<target name="build-channel" depends="build-channel-clean">
+	    <echo message="========================================"/>
+	    <echo message="             ${channel}"/>
+	    <echo message="========================================"/>
+	    <property name="ant.channels.dir" value="${basedir}/ant/Channels"></property>
+	    
+	    <do-if-exist path="${ant.channels.dir}\${channel}">
+	        <ant antfile="${ant.channels.dir}\${channel}\build.xml" target="config"/>
+	    </do-if-exist>
+	    
+	    <do-if-exist path="${ant.channels.dir}\${channel}\libPrj">
+	        <var name="android.library.reference.2" value="${ant.channels.dir}\${channel}\libPrj"/>
+	    </do-if-exist>
+	    
+	    <!-- packet -->
+	    <antcall target="build-packet" inheritAll="true" />
+	</target>
+	
+	<target name="build-channels" description="build all channels" >
+		<foreach list="${config.channels}" target="build-channel" param="channel" inheritall="true">   
+	    </foreach>	 
+	    <delete-dir-safely dir="${basedir}\backup"></delete-dir-safely> 
+	</target>
+	
+	<!--  ===================    -->
+	<!--  	  build model        -->
+	<!--  ===================    -->  
+	<target name="build-all" depends="build-config,build-channels"></target>
+	
+	<target name="build-only-base" depends="build-config"></target>
+	
+	<target name="build-only-channel" depends="build-channels"></target>
+	
+	<target name="build-only-install">
+        <!-- uninstall -->
+        <exec executable="${adb.bin}" failonerror="true" searchpath="${sdk.dir}/platform-tools/" >
+            <!-- <arg line="${adb.device.arg}" /> -->
+            <arg value="uninstall" />
+            <arg value="com.semgilo.game.dotakillx3"></arg>
+        </exec>
+        
+        <!-- install -->
+        <exec executable="${adb.bin}" failonerror="true" searchpath="${sdk.dir}/platform-tools/" >
+            <!-- <arg line="${adb.device.arg}" /> -->
+            <arg value="install" />
+            <arg value="-r" />
+            <arg path="${apk.dir}\${config.version}\DotaKillX3_${config.channels}_${config.version}.apk" />
+        </exec>
+        <!-- 
+        run
+        <exec executable="${adb.bin}" failonerror="true" searchpath="${sdk.dir}/platform-tools/" >
+            <arg line="${adb.device.arg}" />
+            <arg value="run" />
+            <arg value="com.semgilo.game.dotakillx3"></arg>
+        </exec> 
+        -->
+	</target>
+</project>

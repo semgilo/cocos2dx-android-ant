@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<project name="Client" default="config">
+	<!-- property -->
+	<property name="channel.dir" value="${basedir}/ant/channels/Yijie" />
+	
+	<target name="config-src">
+	    <copy todir="${basedir}/src">
+			<fileset dir="${channel.dir}/src" includes="**/*"/>
+		</copy>
+	</target>
+	<target name="config-libs">
+	    <copy todir="${basedir}/libs">
+			<fileset dir="${channel.dir}/libs" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-icons" >  
+        <!-- <ImageCompose srcfile="${channel.dir}/res/icon.png" destfile="${channel.dir}/res/logo.png" output="${channel.dir}/res/icon.png"/> -->
+	</target>
+	
+	<target name="config-res" depends="config-icons">
+	    <copy todir="${basedir}/res">
+			<fileset dir="${channel.dir}/res" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-assets">
+	    <copy todir="${basedir}/assets">
+			<fileset dir="${channel.dir}/assets" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-manifest">
+		 <do-if-exist path="${channels.dir}\AndroidManifest.xml">
+	        <copy file="${channels.dir}\AndroidManifest.xml" tofile="${basedir}\AndroidManifest.xml"/>
+	    </do-if-exist>
+	</target>
+	
+	<target name="config" depends="config-libs,config-res,config-assets,config-src,config-manifest"> 
+		<property name="android.library.reference.1" value="123"/>
+	</target>	
+</project>
+

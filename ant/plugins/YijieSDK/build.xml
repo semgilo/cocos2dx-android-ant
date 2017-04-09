@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<project name="UMAnalyze" default="config">	
+	<!-- property -->
+	<property name="plugin.dir" value="${basedir}\ant\plugins\BaiduAds" />
+	
+	<target name="config-libs">
+	    <copy todir="${basedir}\libs">
+			<fileset dir="${plugin.dir}\libs" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-res">
+	    <copy todir="${basedir}\res">
+			<fileset dir="${plugin.dir}\res" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-manifest">
+		<xmltask source="${basedir}/AndroidManifest.xml" dest="${basedir}/AndroidManifest.xml">
+		    <!-- insert activities -->
+			<insert path="/manifest/application" position="under"><![CDATA[		
+		<!-- 移动云AppX SDK -->
+        <activity android-name="com.baidu.appx.ui.BDInnerBrowser" />
+
+        <receiver android-name="com.baidu.appx.app_download.CompleteReceiver" >
+            <intent-filter>
+                <action android-name="android.intent.action.DOWNLOAD_COMPLETE" />
+                <action android-name="android.intent.action.DOWNLOAD_NOTIFICATION_CLICKED" />
+            </intent-filter>
+            <intent-filter>
+                <action android-name="android.intent.action.PACKAGE_ADDED" />
+
+                <data android-scheme="package" />
+                <!-- 注意！！ 这句必须要加，否则接收不到安装完成广播 -->
+            </intent-filter>
+        </receiver>
+]]></insert>
+		</xmltask>
+		<echo message="finish xmltask , replace android- to android:" />
+		<replace dir="${basedir}" includes="AndroidManifest.xml" encoding="UTF-8">
+			<replacefilter token="android-" value="android:"/>
+		</replace>
+	</target>
+	
+	<target name="config" depends="config-libs,config-res,config-manifest" > 
+	</target>
+</project>
+

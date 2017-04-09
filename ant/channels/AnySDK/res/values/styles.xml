@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+	<style name="Theme.launch" parent="@android:style/Theme.NoTitleBar.Fullscreen">
+	    <item name="android:windowBackground">@drawable/img_bg</item>
+	    <item name="android:windowNoTitle">true</item>
+	    <item name="android:backgroundDimEnabled">false</item> 
+	</style>
+</resources>

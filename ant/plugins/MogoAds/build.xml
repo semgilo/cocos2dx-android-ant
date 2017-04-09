@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<project name="MogoAds" default="config">	
+	<!-- property -->
+	<property name="plugin.dir" value="${basedir}\ant\plugins\MogoAds" />
+
+	<target name="config-src">
+	    <!-- 
+	    <copy todir="${basedir}\src">
+			<fileset dir="${plugin.dir}\src" includes="**/*"/>
+		</copy>
+		-->
+	</target>
+	
+	<target name="config-libs">
+	    <copy todir="${basedir}\libs">
+			<fileset dir="${plugin.dir}\libs" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-res">
+	    <copy todir="${basedir}\res">
+			<fileset dir="${plugin.dir}\res" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-assets">
+	    <copy todir="${basedir}\assets">
+			<fileset dir="${plugin.dir}\assets" includes="**/*"/>
+		</copy>
+	</target>
+	
+	<target name="config-manifest">
+	    <xmltask source="${basedir}/AndroidManifest.xml" dest="${basedir}/AndroidManifest.xml">
+		
+		    <!-- insert activities -->
+			<insert path="/manifest/application" position="under"><![CDATA[		
+		<!-- 声明Mogo的Activity -->
+        <activity
+            android-name="com.adsmogo.adview.AdsMogoWebView"
+            android-label="@string/app_name"
+            android-configChanges="orientation|keyboardHidden|screenSize|keyboard|keyboardHidden"
+            >
+        </activity>
+         <!-- 注册Service，应用下载所需 -->
+        <service
+            android-name="com.adsmogo.controller.service.UpdateService"
+            android-exported="true"
+            android-process=":remote" />
+        <!-- 注册Service，应用被安装所用 -->
+        <service
+            android-name="com.adsmogo.controller.service.CountService"
+            android-exported="true"
+            android-process=":remote" />
+        <!-- 声明AdMob的Activity -->
+        <activity
+            android-name="com.google.ads.AdActivity"
+            android-configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
+    	<!-- GoogleServiceAdMob -->
+        <meta-data android-name="com.google.android.gms.version"
+               android-value="6587000"/> <!-- 注意 5077000 为Googleservice的版本号，需要和Googleservice的版本对应使用 -->
+        <activity android-name="com.google.android.gms.ads.AdActivity"
+              android-configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
+    	<!-- 注册AppActivity -->
+        <activity
+            android-name="com.baidu.mobads.AppActivity"
+            android-configChanges="keyboard|keyboardHidden|orientation" />
+    	<!-- inmobi -->
+        <!-- Mandatory activity declaration to show the Ad in the embedded browser -->
+        <activity
+            android-name="com.inmobi.androidsdk.IMBrowserActivity"
+            android-configChanges="keyboardHidden|orientation|keyboard|smallestScreenSize|screenSize" />
+]]></insert>
+		</xmltask>
+		<echo message="finish xmltask , replace android- to android:" />
+		<replace dir="${basedir}" includes="AndroidManifest.xml" encoding="UTF-8">
+			<replacefilter token="android-" value="android:"/>
+		</replace>
+	</target>
+	
+	<target name="config" depends="config-libs,config-res,config-assets,config-src,config-manifest"> 
+	</target>
+</project>
+

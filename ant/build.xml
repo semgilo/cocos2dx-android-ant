@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Client" default="config" basedir="..">
+    <target name="config">
+		<ant antfile="${basedir}\ant\make.xml" target="build-all">
+		    <property name="config.name" value="HSYY"/>
+		    <property name="config.channels" value="Yijie"/>
+		    <!-- <property name="config.channels" value="Qh360,Bd91,Android,Huawei,Jifeng,Lenovo,Liqu,Meizu,Nduo,Oppo,Other,Taobao,Wandoujia,UC,Wangyi,Xiaoao,Xiaomi"/> -->
+			<property name="config.plugins" value=""/>
+			<property name="config.mode" value="release"/>
+			<property name="config.encrypt" value="false"/>
+			<property name="config.compress" value="false"/>
+			<property name="config.verbose"	value="true"/>
+			<property name="config.version" value="1.0.0"/>
+			<property name="config.review" value="false"/>
+			<property name="config.armeabi" value="armeabi-v7a"/>
+		</ant>
+	</target>
+</project>
